@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>나이 계산기 & 축하일정</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lunar-calendar/1.0.1/lunar-calendar.min.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -35,6 +34,7 @@
         h1, h2 {
             color: #2c3e50;
             margin-bottom: 1.5rem;
+            text-align: center;
         }
 
         h1 {
@@ -46,8 +46,11 @@
             margin-top: 2rem;
         }
 
-        .input-group {
-            margin: 1.5rem 0;
+        .input-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
         }
 
         .calendar-type {
@@ -56,15 +59,23 @@
 
         .radio-group {
             display: flex;
-            gap: 1rem;
+            justify-content: center;
+            gap: 2rem;
             margin-bottom: 1rem;
         }
 
-        .radio-group label {
+        .radio-label {
             display: flex;
             align-items: center;
             gap: 0.5rem;
             cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .radio-label:hover {
+            background-color: #e9ecef;
         }
 
         input[type="date"] {
@@ -89,12 +100,18 @@
             border-radius: 8px;
             font-size: 1rem;
             cursor: pointer;
-            transition: background 0.3s ease;
+            transition: all 0.3s ease;
             width: 100%;
+            margin-top: 1rem;
         }
 
         button:hover {
             background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
         }
 
         #result, #celebrations {
@@ -111,17 +128,25 @@
         }
 
         .result-item {
-            margin: 0.5rem 0;
-            font-size: 1.1rem;
-            color: #2c3e50;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
 
         .celebration-item {
             margin: 1rem 0;
-            padding: 0.8rem;
+            padding: 1rem;
             background: white;
             border-radius: 8px;
             border-left: 4px solid #3498db;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+        }
+
+        .celebration-item:hover {
+            transform: translateX(5px);
         }
 
         .upcoming {
@@ -137,17 +162,22 @@
             color: #e74c3c;
             margin-top: 0.5rem;
             font-size: 0.9rem;
+            text-align: center;
         }
 
         .info-text {
             font-size: 0.9rem;
             color: #7f8c8d;
             margin-top: 1rem;
+            text-align: center;
+            padding: 0.5rem;
+            background: #f1f3f5;
+            border-radius: 5px;
         }
 
         @media (max-width: 480px) {
             .container {
-                padding: 1.5rem;
+                padding: 1rem;
             }
 
             h1 {
@@ -157,29 +187,33 @@
             h2 {
                 font-size: 1.3rem;
             }
+
+            .radio-group {
+                gap: 1rem;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>나이 계산기 & 축하일정</h1>
-        <div class="calendar-type">
-            <div class="radio-group">
-                <label>
-                    <input type="radio" name="calendarType" value="solar" checked>
-                    양력
-                </label>
-                <label>
-                    <input type="radio" name="calendarType" value="lunar">
-                    음력
-                </label>
+        <div class="input-section">
+            <div class="calendar-type">
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="calendarType" value="solar" checked>
+                        양력
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="calendarType" value="lunar">
+                        음력
+                    </label>
+                </div>
             </div>
-        </div>
-        <div class="input-group">
             <input type="date" id="birthDate" />
             <div id="dateError" class="error"></div>
+            <button onclick="calculateAll()">계산하기</button>
         </div>
-        <button onclick="calculateAll()">계산하기</button>
         <div id="result"></div>
         <div id="celebrations"></div>
     </div>
@@ -199,26 +233,19 @@
             { name: "백수", age: 100 }
         ];
 
-        function getSolarDate(date, isLunar) {
-            if (!isLunar) return date;
-            
-            // 음력 날짜를 양력으로 변환
-            const lunarDate = new Date(date);
-            const year = lunarDate.getFullYear();
-            const month = lunarDate.getMonth() + 1;
-            const day = lunarDate.getDate();
-            
-            const lunar = LunarCalendar.lunarToSolar(year, month, day);
-            return new Date(lunar.year, lunar.month - 1, lunar.day);
+        // 음력-양력 변환을 위한 근사치 계산 (평균 차이 약 -20일)
+        function approximateLunarDate(solarDate) {
+            const date = new Date(solarDate);
+            date.setDate(date.getDate() - 20);
+            return date;
         }
 
-        function getLunarDate(date) {
-            const year = date.getFullYear();
-            const month = date.getMonth() + 1;
-            const day = date.getDate();
-            
-            const lunar = LunarCalendar.solarToLunar(year, month, day);
-            return `${lunar.year}년 ${lunar.month}월 ${lunar.day}일`;
+        function formatDate(date) {
+            return date.toLocaleDateString('ko-KR', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
         }
 
         function calculateAll() {
@@ -235,7 +262,7 @@
 
             const today = new Date();
             const birth = new Date(birthDate);
-            const solarBirth = getSolarDate(birth, isLunar);
+            const solarBirth = isLunar ? approximateLunarDate(birth) : birth;
 
             if (solarBirth > today) {
                 errorDiv.textContent = "미래 날짜는 선택할 수 없습니다.";
@@ -260,9 +287,6 @@
 
             const koreanAge = today.getFullYear() - solarBirth.getFullYear() + 1;
 
-            // 음력 생일 정보 추가
-            const lunarBirthDate = getLunarDate(solarBirth);
-            
             resultDiv.innerHTML = `
                 <div class="result-item">
                     <strong>만 나이:</strong> ${age}세
@@ -271,10 +295,11 @@
                     <strong>참고) 2023년 6월 이전의 한국 나이:</strong> ${koreanAge}세
                 </div>
                 <div class="result-item">
-                    <strong>${isLunar ? '양력' : '음력'} 생일:</strong> ${isLunar ? solarBirth.toLocaleDateString('ko-KR') : lunarBirthDate}
+                    <strong>생년월일:</strong> ${formatDate(solarBirth)} (${isLunar ? '음력' : '양력'})
                 </div>
                 <p class="info-text">
                     * 2023년 6월부터 대한민국은 공식적으로 만 나이를 사용합니다.
+                    ${isLunar ? '<br>* 음력 날짜는 참고용으로, 실제와 차이가 있을 수 있습니다.' : ''}
                 </p>
             `;
 
@@ -287,21 +312,13 @@
                 const isPassed = celebrationYear < today;
                 const isUpcoming = !isPassed && celebration.age > age;
                 
-                const dateString = celebrationYear.toLocaleDateString('ko-KR', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
-
                 const className = isPassed ? 'passed' : (isUpcoming ? 'upcoming' : '');
-                
-                const lunarCelebrationDate = getLunarDate(celebrationYear);
 
                 celebrationsHtml += `
                     <div class="celebration-item ${className}">
                         <strong>${celebration.name}</strong> (${celebration.age}세)
                         <br>
-                        ${isLunar ? '양력: ' : '음력: '}${isLunar ? dateString : lunarCelebrationDate}
+                        ${formatDate(celebrationYear)}
                         ${isPassed ? ' (지남)' : (isUpcoming ? ' (예정)' : ' (당해)')}
                     </div>
                 `;
