@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>나이 계산기 & 축하일정</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lunar-calendar/1.0.1/lunar-calendar.min.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -47,6 +48,23 @@
 
         .input-group {
             margin: 1.5rem 0;
+        }
+
+        .calendar-type {
+            margin-bottom: 1rem;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
         }
 
         input[type="date"] {
@@ -145,6 +163,18 @@
 <body>
     <div class="container">
         <h1>나이 계산기 & 축하일정</h1>
+        <div class="calendar-type">
+            <div class="radio-group">
+                <label>
+                    <input type="radio" name="calendarType" value="solar" checked>
+                    양력
+                </label>
+                <label>
+                    <input type="radio" name="calendarType" value="lunar">
+                    음력
+                </label>
+            </div>
+        </div>
         <div class="input-group">
             <input type="date" id="birthDate" />
             <div id="dateError" class="error"></div>
@@ -169,13 +199,35 @@
             { name: "백수", age: 100 }
         ];
 
+        function getSolarDate(date, isLunar) {
+            if (!isLunar) return date;
+            
+            // 음력 날짜를 양력으로 변환
+            const lunarDate = new Date(date);
+            const year = lunarDate.getFullYear();
+            const month = lunarDate.getMonth() + 1;
+            const day = lunarDate.getDate();
+            
+            const lunar = LunarCalendar.lunarToSolar(year, month, day);
+            return new Date(lunar.year, lunar.month - 1, lunar.day);
+        }
+
+        function getLunarDate(date) {
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            
+            const lunar = LunarCalendar.solarToLunar(year, month, day);
+            return `${lunar.year}년 ${lunar.month}월 ${lunar.day}일`;
+        }
+
         function calculateAll() {
             const birthDate = document.getElementById("birthDate").value;
+            const isLunar = document.querySelector('input[name="calendarType"]:checked').value === 'lunar';
             const resultDiv = document.getElementById("result");
             const celebrationsDiv = document.getElementById("celebrations");
             const errorDiv = document.getElementById("dateError");
             
-            // 입력 검증
             if (!birthDate) {
                 errorDiv.textContent = "생년월일을 입력해주세요.";
                 return;
@@ -183,35 +235,34 @@
 
             const today = new Date();
             const birth = new Date(birthDate);
+            const solarBirth = getSolarDate(birth, isLunar);
 
-            // 미래 날짜 체크
-            if (birth > today) {
+            if (solarBirth > today) {
                 errorDiv.textContent = "미래 날짜는 선택할 수 없습니다.";
                 return;
             }
 
-            // 150년 이상 과거 체크
             const maxAge = new Date();
             maxAge.setFullYear(today.getFullYear() - 150);
-            if (birth < maxAge) {
+            if (solarBirth < maxAge) {
                 errorDiv.textContent = "너무 과거의 날짜입니다.";
                 return;
             }
 
-            errorDiv.textContent = ""; // 에러 메시지 초기화
+            errorDiv.textContent = "";
 
-            // 만 나이 계산
-            let age = today.getFullYear() - birth.getFullYear();
-            const isBeforeBirthday = (today.getMonth() < birth.getMonth()) || 
-                (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate());
+            let age = today.getFullYear() - solarBirth.getFullYear();
+            const isBeforeBirthday = (today.getMonth() < solarBirth.getMonth()) || 
+                (today.getMonth() === solarBirth.getMonth() && today.getDate() < solarBirth.getDate());
             if (isBeforeBirthday) {
                 age -= 1;
             }
 
-            // 한국식 나이 계산 (참고용)
-            const koreanAge = today.getFullYear() - birth.getFullYear() + 1;
+            const koreanAge = today.getFullYear() - solarBirth.getFullYear() + 1;
 
-            // 결과 표시
+            // 음력 생일 정보 추가
+            const lunarBirthDate = getLunarDate(solarBirth);
+            
             resultDiv.innerHTML = `
                 <div class="result-item">
                     <strong>만 나이:</strong> ${age}세
@@ -219,17 +270,19 @@
                 <div class="result-item">
                     <strong>참고) 2023년 6월 이전의 한국 나이:</strong> ${koreanAge}세
                 </div>
+                <div class="result-item">
+                    <strong>${isLunar ? '양력' : '음력'} 생일:</strong> ${isLunar ? solarBirth.toLocaleDateString('ko-KR') : lunarBirthDate}
+                </div>
                 <p class="info-text">
                     * 2023년 6월부터 대한민국은 공식적으로 만 나이를 사용합니다.
                 </p>
             `;
 
-            // 축하일정 계산 및 표시
             let celebrationsHtml = '<h2>전통 축하일정</h2>';
             
             CELEBRATIONS.forEach(celebration => {
-                const celebrationYear = new Date(birth);
-                celebrationYear.setFullYear(birth.getFullYear() + celebration.age);
+                const celebrationYear = new Date(solarBirth);
+                celebrationYear.setFullYear(solarBirth.getFullYear() + celebration.age);
                 
                 const isPassed = celebrationYear < today;
                 const isUpcoming = !isPassed && celebration.age > age;
@@ -242,11 +295,13 @@
 
                 const className = isPassed ? 'passed' : (isUpcoming ? 'upcoming' : '');
                 
+                const lunarCelebrationDate = getLunarDate(celebrationYear);
+
                 celebrationsHtml += `
                     <div class="celebration-item ${className}">
                         <strong>${celebration.name}</strong> (${celebration.age}세)
                         <br>
-                        ${dateString}
+                        ${isLunar ? '양력: ' : '음력: '}${isLunar ? dateString : lunarCelebrationDate}
                         ${isPassed ? ' (지남)' : (isUpcoming ? ' (예정)' : ' (당해)')}
                     </div>
                 `;
@@ -254,7 +309,6 @@
 
             celebrationsDiv.innerHTML = celebrationsHtml;
 
-            // 애니메이션 효과
             resultDiv.classList.remove("show");
             celebrationsDiv.classList.remove("show");
             setTimeout(() => {
@@ -263,7 +317,6 @@
             }, 10);
         }
 
-        // 페이지 로드 시 오늘 날짜를 최대값으로 설정
         document.addEventListener('DOMContentLoaded', function() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('birthDate').max = today;
