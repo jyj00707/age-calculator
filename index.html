@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나이 계산기 & 축하일정</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+
+        h1, h2 {
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+        }
+
+        h2 {
+            font-size: 1.4rem;
+            margin-top: 2rem;
+        }
+
+        .input-group {
+            margin: 1.5rem 0;
+        }
+
+        input[type="date"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="date"]:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            width: 100%;
+        }
+
+        button:hover {
+            background: #2980b9;
+        }
+
+        #result, #celebrations {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 8px;
+            background: #f8f9fa;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        #result.show, #celebrations.show {
+            opacity: 1;
+        }
+
+        .result-item {
+            margin: 0.5rem 0;
+            font-size: 1.1rem;
+            color: #2c3e50;
+        }
+
+        .celebration-item {
+            margin: 1rem 0;
+            padding: 0.8rem;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+
+        .upcoming {
+            border-left-color: #e74c3c;
+        }
+
+        .passed {
+            border-left-color: #95a5a6;
+            color: #7f8c8d;
+        }
+
+        .error {
+            color: #e74c3c;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .info-text {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-top: 1rem;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1.5rem;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            h2 {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>나이 계산기 & 축하일정</h1>
+        <div class="input-group">
+            <input type="date" id="birthDate" />
+            <div id="dateError" class="error"></div>
+        </div>
+        <button onclick="calculateAll()">계산하기</button>
+        <div id="result"></div>
+        <div id="celebrations"></div>
+    </div>
+
+    <script>
+        const CELEBRATIONS = [
+            { name: "돌잔치", age: 1 },
+            { name: "성년례", age: 20 },
+            { name: "삼순", age: 30 },
+            { name: "사순", age: 40 },
+            { name: "오순", age: 50 },
+            { name: "환갑", age: 60 },
+            { name: "진갑", age: 70 },
+            { name: "칠순", age: 70 },
+            { name: "팔순", age: 80 },
+            { name: "구순", age: 90 },
+            { name: "백수", age: 100 }
+        ];
+
+        function calculateAll() {
+            const birthDate = document.getElementById("birthDate").value;
+            const resultDiv = document.getElementById("result");
+            const celebrationsDiv = document.getElementById("celebrations");
+            const errorDiv = document.getElementById("dateError");
+            
+            // 입력 검증
+            if (!birthDate) {
+                errorDiv.textContent = "생년월일을 입력해주세요.";
+                return;
+            }
+
+            const today = new Date();
+            const birth = new Date(birthDate);
+
+            // 미래 날짜 체크
+            if (birth > today) {
+                errorDiv.textContent = "미래 날짜는 선택할 수 없습니다.";
+                return;
+            }
+
+            // 150년 이상 과거 체크
+            const maxAge = new Date();
+            maxAge.setFullYear(today.getFullYear() - 150);
+            if (birth < maxAge) {
+                errorDiv.textContent = "너무 과거의 날짜입니다.";
+                return;
+            }
+
+            errorDiv.textContent = ""; // 에러 메시지 초기화
+
+            // 만 나이 계산
+            let age = today.getFullYear() - birth.getFullYear();
+            const isBeforeBirthday = (today.getMonth() < birth.getMonth()) || 
+                (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate());
+            if (isBeforeBirthday) {
+                age -= 1;
+            }
+
+            // 한국식 나이 계산 (참고용)
+            const koreanAge = today.getFullYear() - birth.getFullYear() + 1;
+
+            // 결과 표시
+            resultDiv.innerHTML = `
+                <div class="result-item">
+                    <strong>만 나이:</strong> ${age}세
+                </div>
+                <div class="result-item">
+                    <strong>참고) 2023년 6월 이전의 한국 나이:</strong> ${koreanAge}세
+                </div>
+                <p class="info-text">
+                    * 2023년 6월부터 대한민국은 공식적으로 만 나이를 사용합니다.
+                </p>
+            `;
+
+            // 축하일정 계산 및 표시
+            let celebrationsHtml = '<h2>전통 축하일정</h2>';
+            
+            CELEBRATIONS.forEach(celebration => {
+                const celebrationYear = new Date(birth);
+                celebrationYear.setFullYear(birth.getFullYear() + celebration.age);
+                
+                const isPassed = celebrationYear < today;
+                const isUpcoming = !isPassed && celebration.age > age;
+                
+                const dateString = celebrationYear.toLocaleDateString('ko-KR', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+
+                const className = isPassed ? 'passed' : (isUpcoming ? 'upcoming' : '');
+                
+                celebrationsHtml += `
+                    <div class="celebration-item ${className}">
+                        <strong>${celebration.name}</strong> (${celebration.age}세)
+                        <br>
+                        ${dateString}
+                        ${isPassed ? ' (지남)' : (isUpcoming ? ' (예정)' : ' (당해)')}
+                    </div>
+                `;
+            });
+
+            celebrationsDiv.innerHTML = celebrationsHtml;
+
+            // 애니메이션 효과
+            resultDiv.classList.remove("show");
+            celebrationsDiv.classList.remove("show");
+            setTimeout(() => {
+                resultDiv.classList.add("show");
+                celebrationsDiv.classList.add("show");
+            }, 10);
+        }
+
+        // 페이지 로드 시 오늘 날짜를 최대값으로 설정
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('birthDate').max = today;
+        });
+    </script>
+</body>
+</html>
