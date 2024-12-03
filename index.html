@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>나이 계산기 & 축하일정</title>
+    <title>나이 계산기</title>
     <style>
         * {
             box-sizing: border-box;
@@ -28,66 +28,41 @@
             border-radius: 15px;
             box-shadow: 0 10px 20px rgba(0,0,0,0.1);
             width: 100%;
-            max-width: 600px;
+            max-width: 500px;
         }
 
-        h1, h2 {
+        h1 {
             color: #2c3e50;
             margin-bottom: 1.5rem;
             text-align: center;
         }
 
-        h1 {
-            font-size: 1.8rem;
+        .input-group {
+            margin: 1.5rem 0;
         }
 
-        h2 {
-            font-size: 1.4rem;
-            margin-top: 2rem;
-        }
-
-        .input-section {
-            background: #f8f9fa;
-            padding: 1.5rem;
-            border-radius: 10px;
-            margin-bottom: 1.5rem;
-        }
-
-        .calendar-type {
-            margin-bottom: 1rem;
-        }
-
-        .radio-group {
+        .manual-input {
             display: flex;
-            justify-content: center;
-            gap: 2rem;
-            margin-bottom: 1rem;
+            gap: 8px;
+            margin-top: 10px;
         }
 
-        .radio-label {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            cursor: pointer;
-            padding: 0.5rem 1rem;
-            border-radius: 5px;
-            transition: background-color 0.3s;
-        }
-
-        .radio-label:hover {
-            background-color: #e9ecef;
-        }
-
-        input[type="date"] {
+        input[type="date"],
+        input[type="number"] {
             width: 100%;
             padding: 12px;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
             font-size: 1rem;
-            transition: border-color 0.3s ease;
+            transition: border-color 0.3s;
         }
 
-        input[type="date"]:focus {
+        input[type="number"] {
+            width: 33%;
+            text-align: center;
+        }
+
+        input:focus {
             border-color: #3498db;
             outline: none;
         }
@@ -100,21 +75,15 @@
             border-radius: 8px;
             font-size: 1rem;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: background 0.3s ease;
             width: 100%;
-            margin-top: 1rem;
         }
 
         button:hover {
             background: #2980b9;
-            transform: translateY(-2px);
         }
 
-        button:active {
-            transform: translateY(0);
-        }
-
-        #result, #celebrations {
+        #result {
             margin-top: 1.5rem;
             padding: 1rem;
             border-radius: 8px;
@@ -123,30 +92,22 @@
             transition: opacity 0.5s ease;
         }
 
-        #result.show, #celebrations.show {
+        #result.show {
             opacity: 1;
         }
 
         .result-item {
-            margin: 1rem 0;
-            padding: 1rem;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            margin: 0.5rem 0;
+            font-size: 1.1rem;
+            color: #2c3e50;
         }
 
         .celebration-item {
             margin: 1rem 0;
-            padding: 1rem;
+            padding: 0.8rem;
             background: white;
             border-radius: 8px;
             border-left: 4px solid #3498db;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            transition: transform 0.3s ease;
-        }
-
-        .celebration-item:hover {
-            transform: translateX(5px);
         }
 
         .upcoming {
@@ -165,55 +126,49 @@
             text-align: center;
         }
 
+        .radio-group {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1rem;
+        }
+
         .info-text {
             font-size: 0.9rem;
             color: #7f8c8d;
             margin-top: 1rem;
-            text-align: center;
-            padding: 0.5rem;
-            background: #f1f3f5;
-            border-radius: 5px;
         }
 
         @media (max-width: 480px) {
             .container {
-                padding: 1rem;
+                padding: 1.5rem;
             }
-
-            h1 {
-                font-size: 1.5rem;
-            }
-
-            h2 {
-                font-size: 1.3rem;
-            }
-
-            .radio-group {
-                gap: 1rem;
+            input[type="number"] {
+                padding: 8px;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>나이 계산기 & 축하일정</h1>
-        <div class="input-section">
-            <div class="calendar-type">
-                <div class="radio-group">
-                    <label class="radio-label">
-                        <input type="radio" name="calendarType" value="solar" checked>
-                        양력
-                    </label>
-                    <label class="radio-label">
-                        <input type="radio" name="calendarType" value="lunar">
-                        음력
-                    </label>
-                </div>
-            </div>
-            <input type="date" id="birthDate" />
-            <div id="dateError" class="error"></div>
-            <button onclick="calculateAll()">계산하기</button>
+        <h1>나이 계산기</h1>
+        <div class="radio-group">
+            <label>
+                <input type="radio" name="calendarType" value="solar" checked> 양력
+            </label>
+            <label>
+                <input type="radio" name="calendarType" value="lunar"> 음력
+            </label>
         </div>
+        <div class="input-group">
+            <div class="manual-input">
+                <input type="number" id="yearInput" placeholder="년도" min="1900" max="2024">
+                <input type="number" id="monthInput" placeholder="월" min="1" max="12">
+                <input type="number" id="dayInput" placeholder="일" min="1" max="31">
+            </div>
+            <div id="dateError" class="error"></div>
+        </div>
+        <button onclick="calculateAll()">계산하기</button>
         <div id="result"></div>
         <div id="celebrations"></div>
     </div>
@@ -226,53 +181,45 @@
             { name: "사순", age: 40 },
             { name: "오순", age: 50 },
             { name: "환갑", age: 60 },
-            { name: "진갑", age: 70 },
-            { name: "칠순", age: 70 },
+            { name: "진갑/칠순", age: 70 },
             { name: "팔순", age: 80 },
             { name: "구순", age: 90 },
             { name: "백수", age: 100 }
         ];
 
-        // 음력-양력 변환을 위한 근사치 계산 (평균 차이 약 -20일)
-        function approximateLunarDate(solarDate) {
-            const date = new Date(solarDate);
-            date.setDate(date.getDate() - 20);
-            return date;
-        }
-
-        function formatDate(date) {
-            return date.toLocaleDateString('ko-KR', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
+        function validateDate(year, month, day) {
+            const date = new Date(year, month - 1, day);
+            return date.getFullYear() == year && date.getMonth() == month - 1 && date.getDate() == day;
         }
 
         function calculateAll() {
-            const birthDate = document.getElementById("birthDate").value;
+            const year = document.getElementById('yearInput').value;
+            const month = document.getElementById('monthInput').value;
+            const day = document.getElementById('dayInput').value;
             const isLunar = document.querySelector('input[name="calendarType"]:checked').value === 'lunar';
+            
+            const errorDiv = document.getElementById("dateError");
             const resultDiv = document.getElementById("result");
             const celebrationsDiv = document.getElementById("celebrations");
-            const errorDiv = document.getElementById("dateError");
-            
-            if (!birthDate) {
-                errorDiv.textContent = "생년월일을 입력해주세요.";
+
+            if (!year || !month || !day) {
+                errorDiv.textContent = "생년월일을 모두 입력해주세요.";
+                return;
+            }
+
+            if (!validateDate(parseInt(year), parseInt(month), parseInt(day))) {
+                errorDiv.textContent = "올바르지 않은 날짜입니다.";
                 return;
             }
 
             const today = new Date();
-            const birth = new Date(birthDate);
-            const solarBirth = isLunar ? approximateLunarDate(birth) : birth;
+            const birth = new Date(year, month - 1, day);
+            
+            // 음력일 경우 약 20일 차이를 적용
+            const solarBirth = isLunar ? new Date(birth.setDate(birth.getDate() - 20)) : birth;
 
             if (solarBirth > today) {
                 errorDiv.textContent = "미래 날짜는 선택할 수 없습니다.";
-                return;
-            }
-
-            const maxAge = new Date();
-            maxAge.setFullYear(today.getFullYear() - 150);
-            if (solarBirth < maxAge) {
-                errorDiv.textContent = "너무 과거의 날짜입니다.";
                 return;
             }
 
@@ -294,9 +241,6 @@
                 <div class="result-item">
                     <strong>참고) 2023년 6월 이전의 한국 나이:</strong> ${koreanAge}세
                 </div>
-                <div class="result-item">
-                    <strong>생년월일:</strong> ${formatDate(solarBirth)} (${isLunar ? '음력' : '양력'})
-                </div>
                 <p class="info-text">
                     * 2023년 6월부터 대한민국은 공식적으로 만 나이를 사용합니다.
                     ${isLunar ? '<br>* 음력 날짜는 참고용으로, 실제와 차이가 있을 수 있습니다.' : ''}
@@ -304,21 +248,19 @@
             `;
 
             let celebrationsHtml = '<h2>전통 축하일정</h2>';
-            
             CELEBRATIONS.forEach(celebration => {
                 const celebrationYear = new Date(solarBirth);
                 celebrationYear.setFullYear(solarBirth.getFullYear() + celebration.age);
                 
                 const isPassed = celebrationYear < today;
                 const isUpcoming = !isPassed && celebration.age > age;
-                
                 const className = isPassed ? 'passed' : (isUpcoming ? 'upcoming' : '');
-
+                
                 celebrationsHtml += `
                     <div class="celebration-item ${className}">
                         <strong>${celebration.name}</strong> (${celebration.age}세)
                         <br>
-                        ${formatDate(celebrationYear)}
+                        ${celebrationYear.toLocaleDateString('ko-KR')}
                         ${isPassed ? ' (지남)' : (isUpcoming ? ' (예정)' : ' (당해)')}
                     </div>
                 `;
@@ -327,16 +269,15 @@
             celebrationsDiv.innerHTML = celebrationsHtml;
 
             resultDiv.classList.remove("show");
-            celebrationsDiv.classList.remove("show");
             setTimeout(() => {
                 resultDiv.classList.add("show");
-                celebrationsDiv.classList.add("show");
             }, 10);
         }
 
+        // 초기 설정
         document.addEventListener('DOMContentLoaded', function() {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('birthDate').max = today;
+            const currentYear = new Date().getFullYear();
+            document.getElementById('yearInput').max = currentYear;
         });
     </script>
 </body>
